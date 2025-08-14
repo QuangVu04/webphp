@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>User List</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        form {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            display: inline-block;
+        }
+
+        input {
+            margin: 5px;
+        }
+
+        button {
+            padding: 5px 10px;
+            margin: 2px;
+        }
+
+        #pagination button {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Quản lý người dùng</h1>
+
+    <!-- Form thêm / cập nhật -->
+    <!-- <form id="userForm">
+        <input type="hidden" id="userId">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="full_name" placeholder="Full Name">
+        <input type="text" id="status" placeholder="Status">
+        <input type="password" id="password" placeholder="Password">
+        <button type="submit">Lưu</button>
+        <button type="button" onclick="resetForm()">Hủy</button>
+    </form> -->
+
+    <!-- Form search -->
+    <form id="searchForm">
+        <input type="text" id="searchUsername" placeholder="Username">
+        <input type="email" id="searchEmail" placeholder="Email">
+        <input type="text" id="searchPhone" placeholder="Phone">
+        <input type="text" id="searchRole" placeholder="Role">
+        <input type="text" id="searchStatus" placeholder="Status">
+        <input type="date" id="searchFromDate" placeholder="From Date">
+        <input type="date" id="searchToDate" placeholder="To Date">
+        <button type="submit">Tìm kiếm</button>
+        <button type="button" onclick="resetSearch()">Reset</button>
+    </form>
+
+    <!-- Bảng danh sách -->
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Full Name</th>
+                <th>Phone Number</th>
+                <th>Status</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div id="pagination" style="margin-top: 20px;"></div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/users';
+        const SEARCH_API_URL = 'http://localhost:8000/users/search';
+        window.currentSearchContext = null;
+
+        /* --- Render bảng users + pagination --- */
+        function renderUsersTable(response) {
+            const tbody = document.querySelector('#userTable tbody');
+            tbody.innerHTML = '';
+
+            const users = response.data;
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td>${user.full_name || ''}</td>
+                    <td>${user.phone_number || ''}</td>
+                    <td>${user.status || ''}</td>
+                    <td>${user.role || ''}</td>
+                    <td>
+                        <button onclick="editUser('${user.id}', '${user.username}', '${user.email}', '${user.full_name || ''}', '${user.status || ''}')">Edit</button>
+                        <button onclick="deleteUser('${user.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            renderPagination(response.page, response.total_pages);
+        }
+
+        function renderPagination(currentPage, totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                if (i === currentPage) btn.disabled = true;
+                btn.addEventListener('click', () => {
+                    if (window.currentSearchContext) {
+                        window.currentSearchContext.page = i;
+                        searchUsers(window.currentSearchContext);
+                    } else {
+                        fetchUsers(i);
+                    }
+                });
+                pagination.appendChild(btn);
+            }
+        }
+
+        /* --- Fetch all users (GET) --- */
+        async function fetchUsers(page = 1, limit = 5) {
+            try {
+                const res = await fetch(`${API_URL}?page=${page}&limit=${limit}`);
+                const data = await res.json();
+                window.currentSearchContext = null;
+                renderUsersTable(data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        /* --- Search users (POST) --- */
+        async function searchUsers(context) {
+            try {
+                window.currentSearchContext = context;
+                const res = await fetch(SEARCH_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(context)
+                });
+                const data = await res.json();
+                renderUsersTable(data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        /* --- Create / Update / Delete --- */
+        async function createUser(user) {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            });
+            return res.json();
+        }
+
+        async function updateUser(id, user) {
+            const res = await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            });
+            return res.json();
+        }
+
+        async function deleteUser(id) {
+            if (!confirm("Bạn có chắc muốn xóa user này?")) return;
+            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            if (res.status === 204) {
+                alert("Đã xóa!");
+                if (window.currentSearchContext) searchUsers(window.currentSearchContext);
+                else fetchUsers();
+            } else {
+                const errMsg = await res.json();
+                alert("Lỗi: " + errMsg.error);
+            }
+        }
+
+        /* --- Edit / Reset Form --- */
+        function editUser(id, username, email, full_name, status) {
+            document.getElementById('userId').value = id;
+            document.getElementById('username').value = username;
+            document.getElementById('email').value = email;
+            document.getElementById('full_name').value = full_name;
+            document.getElementById('status').value = status;
+            document.getElementById('password').value = '';
+        }
+
+        function resetForm() {
+            document.getElementById('userId').value = '';
+            document.getElementById('userForm').reset();
+        }
+
+        function resetSearch() {
+            document.getElementById('searchForm').reset();
+            window.currentSearchContext = null;
+            fetchUsers();
+        }
+
+        /* --- Event submit userForm --- */
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('userId').value;
+            const user = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                full_name: document.getElementById('full_name').value,
+                status: document.getElementById('status').value,
+                password: document.getElementById('password').value
+            };
+
+            if (id) {
+                await updateUser(id, user);
+                alert("Cập nhật thành công!");
+            } else {
+                await createUser(user);
+                alert("Thêm mới thành công!");
+            }
+            resetForm();
+            if (window.currentSearchContext) searchUsers(window.currentSearchContext);
+            else fetchUsers();
+        });
+
+        /* --- Event submit searchForm --- */
+        document.getElementById('searchForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const context = {
+                username: document.getElementById('searchUsername').value,
+                email: document.getElementById('searchEmail').value,
+                phone: document.getElementById('searchPhone').value,
+                role: document.getElementById('searchRole').value,
+                status: document.getElementById('searchStatus').value,
+                fromDate: document.getElementById('searchFromDate').value,
+                toDate: document.getElementById('searchToDate').value,
+                page: 1,
+                limit: 5
+            };
+            searchUsers(context);
+        });
+
+        /* --- Init --- */
+        fetchUsers();
+    </script>
+</body>
+
+</html>

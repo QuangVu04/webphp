@@ -1,5 +1,6 @@
 <?php
 
+namespace app\enums;
 
 enum UserStatus: string
 {

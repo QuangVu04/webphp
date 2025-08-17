@@ -1,10 +1,12 @@
 <?php
 
-namespace app\repository;
+namespace app\repository\Impl;
 
+use app\repository\UserRepository;
 use app\dto\UserResponse;
 use app\models\User;
 use app\dto\UserSearchContext;
+use app\enums\UserStatus;
 
 
 class UserRepositoryImpl implements UserRepository
@@ -144,7 +146,7 @@ class UserRepositoryImpl implements UserRepository
             $user->setPhoneNumber($row['phone_number']);
             $user->setStatus($row['status']);
             $user->setRole($row['role_name']);
-            $user->setCreatedAt( new \DateTime($row['created_at']));
+            $user->setCreatedAt(new \DateTime($row['created_at']));
             $users[] = $user->toArray();
         }
 
@@ -202,7 +204,57 @@ class UserRepositoryImpl implements UserRepository
         $user->setFullName($row['full_name']);
         $user->setAvatar($row['avatar']);
         $user->setPhoneNumber($row['phone_number']);
-        $user->setStatus($row['status']);
+        // $user->setStatus($row['status']);
+        return $user;
+    }
+
+    public function findByEmail(string $email): ?User
+    {
+        $stmt = $this->mysqli->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            return null;
+        }
+
+        $row = $result->fetch_assoc();
+        $user = new User();
+        $user->setId($row['id']);
+        $user->setUsername($row['username']);
+        $user->setEmail($row['email']);
+        $user->setPassword($row['password']);
+        $user->setFullName($row['full_name']);
+        $user->setAvatar($row['avatar']);
+        $user->setPhoneNumber($row['phone_number']);
+        // $user->setStatus(UserStatus::from($row['status']));
+
+        return $user;
+    }
+
+    public function findByUsername(string $username): ?User
+    {
+        $stmt = $this->mysqli->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            return null;
+        }
+
+        $row = $result->fetch_assoc();
+        $user = new User();
+        $user->setId($row['id']);
+        $user->setUsername($row['username']);
+        $user->setEmail($row['email']);
+        $user->setPassword($row['password']);
+        $user->setFullName($row['full_name']);
+        $user->setAvatar($row['avatar']);
+        $user->setPhoneNumber($row['phone_number']);
+        // $user->setStatus(UserStatus::from($row['status']));
+
         return $user;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace app\models;
 
-use UserStatus;
+use app\enums\UserStatus;
 
 class User extends BaseEntity {
     protected ?string $username = null;
@@ -59,7 +59,8 @@ class User extends BaseEntity {
     {
         return $this->avatar;
     }
-    public function setAvatar(string $avatar): self
+
+    public function setAvatar(?string $avatar): self
     {
         $this->avatar = $avatar;
         return $this;

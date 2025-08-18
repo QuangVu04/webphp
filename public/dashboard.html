@@ -4,267 +4,255 @@
 <head>
     <meta charset="UTF-8">
     <title>User List</title>
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
-        table {
-            border-collapse: collapse;
+        /* Modal overlay */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Modal box */
+        .modal-content {
+            background: #fff;
+            padding: 20px 25px;
+            border-radius: 10px;
+            width: 420px;
+            max-width: 95%;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.3s ease;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        /* Title */
+        .modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-align: center;
+            color: #333;
+        }
+
+        /* Label + input layout */
+        .modal-content label {
+            display: block;
+            margin: 8px 0 4px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .modal-content input,
+        .modal-content select {
             width: 100%;
-        }
-
-        th,
-        td {
+            padding: 8px 10px;
+            margin-bottom: 12px;
             border: 1px solid #ccc;
-            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        th {
-            background: #eee;
+        .modal-content input:focus,
+        .modal-content select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+            outline: none;
         }
 
-        form {
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            display: inline-block;
+        /* Buttons row */
+        .modal-content .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        input {
-            margin: 5px;
+        .modal-content button {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s, transform 0.1s;
         }
 
-        button {
-            padding: 5px 10px;
-            margin: 2px;
+        .modal-content button[type="submit"] {
+            background: #007bff;
+            color: #fff;
         }
 
-        #pagination button {
-            margin-right: 5px;
+        .modal-content button[type="submit"]:hover {
+            background: #0056b3;
+        }
+
+        .modal-content button[type="button"] {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-content button[type="button"]:hover {
+            background: #ddd;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-15px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Quản lý người dùng</h1>
+    <script src="./js/auth.js"></script>
+    <div class="container flex">
+        <div class="nav">
+            <a href="dashboard.html"><i class="fa fa-address-card"></i>Dashboard</a>
+            <a href="index.html"><i class="fa fa-home"></i>Main page</a>
+        </div>
+        <div class="content">
+            <h1>User Management</h1>
 
-    <!-- Form thêm / cập nhật -->
-    <!-- <form id="userForm">
-        <input type="hidden" id="userId">
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="text" id="full_name" placeholder="Full Name">
-        <input type="text" id="status" placeholder="Status">
-        <input type="password" id="password" placeholder="Password">
-        <button type="submit">Lưu</button>
-        <button type="button" onclick="resetForm()">Hủy</button>
-    </form> -->
+            <!-- Form search -->
+            <form id="searchForm">
+                <input type="text" id="searchUsername" placeholder="Username">
+                <input type="email" id="searchEmail" placeholder="Email">
+                <input type="text" id="searchPhone" placeholder="Phone">
+                <input type="text" id="searchRole" placeholder="Role">
+                <input type="text" id="searchStatus" placeholder="Status">
+                <input type="date" id="searchFromDate" placeholder="From Date">
+                <input type="date" id="searchToDate" placeholder="To Date">
+                <button type="submit">Tìm kiếm</button>
+                <button type="button" onclick="resetSearch()">Reset</button>
+            </form>
 
-    <!-- Form search -->
-    <form id="searchForm">
-        <input type="text" id="searchUsername" placeholder="Username">
-        <input type="email" id="searchEmail" placeholder="Email">
-        <input type="text" id="searchPhone" placeholder="Phone">
-        <input type="text" id="searchRole" placeholder="Role">
-        <input type="text" id="searchStatus" placeholder="Status">
-        <input type="date" id="searchFromDate" placeholder="From Date">
-        <input type="date" id="searchToDate" placeholder="To Date">
-        <button type="submit">Tìm kiếm</button>
-        <button type="button" onclick="resetSearch()">Reset</button>
-    </form>
+            <!-- Bảng danh sách -->
+            <table id="userTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th>Phone Number</th>
+                        <th>Status</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
 
-    <!-- Bảng danh sách -->
-    <table id="userTable">
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Full Name</th>
-                <th>Phone Number</th>
-                <th>Status</th>
-                <th>Role</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+            <!-- Pagination -->
+            <div class="flex" style="justify-content: center; align-items: center; gap: 10px;">
+                <div id="pagination" style="margin-top: 20px;"></div>
+            </div>
 
-    <!-- Pagination -->
-    <div id="pagination" style="margin-top: 20px;"></div>
+        </div>
+    </div>
 
+    <!-- Modal update user -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <h3>Edit User</h3>
+            <form id="userForm" style="display: block;">
+                <input type="hidden" id="userId">
+                <label>Username</label>
+                <input type="text" id="username">
+
+                <label>Email</label>
+                <input type="email" id="email">
+
+                <label>Full Name</label>
+                <input type="text" id="fullName">
+
+                <label>Phone</label>
+                <input type="text" id="phone">
+
+                <label>Status</label>
+                <select id="status">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+
+                <button type="submit">Save</button>
+                <button type="button" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <button id="logoutBtn" class="logout-btn">Logout</button>
     <script>
-        const API_URL = 'http://localhost:8000/users';
-        const SEARCH_API_URL = 'http://localhost:8000/users/search';
-        window.currentSearchContext = null;
-
-        /* --- Render bảng users + pagination --- */
-        function renderUsersTable(response) {
-            const tbody = document.querySelector('#userTable tbody');
-            tbody.innerHTML = '';
-
-            const users = response.data;
-            users.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${user.username}</td>
-                    <td>${user.email}</td>
-                    <td>${user.full_name || ''}</td>
-                    <td>${user.phone_number || ''}</td>
-                    <td>${user.status || ''}</td>
-                    <td>${user.role || ''}</td>
-                    <td>
-                        <button onclick="editUser('${user.id}', '${user.username}', '${user.email}', '${user.full_name || ''}', '${user.status || ''}')">Edit</button>
-                        <button onclick="deleteUser('${user.id}')">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-
-            renderPagination(response.page, response.total_pages);
-        }
-
-        function renderPagination(currentPage, totalPages) {
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
-
-            for (let i = 1; i <= totalPages; i++) {
-                const btn = document.createElement('button');
-                btn.textContent = i;
-                if (i === currentPage) btn.disabled = true;
-                btn.addEventListener('click', () => {
-                    if (window.currentSearchContext) {
-                        window.currentSearchContext.page = i;
-                        searchUsers(window.currentSearchContext);
-                    } else {
-                        fetchUsers(i);
-                    }
-                });
-                pagination.appendChild(btn);
-            }
-        }
-
-        /* --- Fetch all users (GET) --- */
-        async function fetchUsers(page = 1, limit = 5) {
+        protectRoute();
+        document.getElementById("logoutBtn").addEventListener("click", async () => {
             try {
-                const res = await fetch(`${API_URL}?page=${page}&limit=${limit}`);
-                const data = await res.json();
-                window.currentSearchContext = null;
-                renderUsersTable(data);
-            } catch (err) {
-                console.error(err);
+                await logout(); // dùng hàm logout() đã viết
+                window.location.replace("login.html"); // hoặc login.html
+            } catch (e) {
+                console.error("Logout failed:", e);
+                window.location.replace("login.html");
             }
-        }
-
-        /* --- Search users (POST) --- */
-        async function searchUsers(context) {
-            try {
-                window.currentSearchContext = context;
-                const res = await fetch(SEARCH_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(context)
-                });
-                const data = await res.json();
-                renderUsersTable(data);
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        /* --- Create / Update / Delete --- */
-        async function createUser(user) {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            });
-            return res.json();
-        }
-
-        async function updateUser(id, user) {
-            const res = await fetch(`${API_URL}/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            });
-            return res.json();
-        }
-
-        async function deleteUser(id) {
-            if (!confirm("Bạn có chắc muốn xóa user này?")) return;
-            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-            if (res.status === 204) {
-                alert("Đã xóa!");
-                if (window.currentSearchContext) searchUsers(window.currentSearchContext);
-                else fetchUsers();
-            } else {
-                const errMsg = await res.json();
-                alert("Lỗi: " + errMsg.error);
-            }
-        }
-
-        /* --- Edit / Reset Form --- */
-        function editUser(id, username, email, full_name, status) {
-            document.getElementById('userId').value = id;
-            document.getElementById('username').value = username;
-            document.getElementById('email').value = email;
-            document.getElementById('full_name').value = full_name;
-            document.getElementById('status').value = status;
-            document.getElementById('password').value = '';
-        }
-
-        function resetForm() {
-            document.getElementById('userId').value = '';
-            document.getElementById('userForm').reset();
-        }
-
-        function resetSearch() {
-            document.getElementById('searchForm').reset();
-            window.currentSearchContext = null;
-            fetchUsers();
-        }
-
-        /* --- Event submit userForm --- */
-        document.getElementById('userForm').addEventListener('submit', async (e) => {
+        });
+        document.getElementById("userForm").addEventListener("submit", async function (e) {
             e.preventDefault();
-            const id = document.getElementById('userId').value;
-            const user = {
-                username: document.getElementById('username').value,
-                email: document.getElementById('email').value,
-                full_name: document.getElementById('full_name').value,
-                status: document.getElementById('status').value,
-                password: document.getElementById('password').value
-            };
 
-            if (id) {
+            const id = document.getElementById("userId")?.value; // hidden input chứa ID
+            console.log("Updating user with ID:", id);
+
+            // chỉ lấy field nếu tồn tại & có value
+            const user = {};
+            const username = document.getElementById("username")?.value;
+            if (username) user.username = username;
+
+            const email = document.getElementById("email")?.value;
+            if (email) user.email = email;
+
+            const full_name = document.getElementById("full_name")?.value;
+            if (full_name) user.full_name = full_name;
+
+            const status = document.getElementById("status")?.value;
+            if (status) user.status = status;
+
+            const password = document.getElementById("password")?.value;
+            if (password) user.password = password;
+
+            try {
+                console.log("Updating user:", user);
                 await updateUser(id, user);
                 alert("Cập nhật thành công!");
-            } else {
-                await createUser(user);
-                alert("Thêm mới thành công!");
+                resetForm();
+                closeModal();
+                fetchUsers(); // reload lại danh sách
+            } catch (err) {
+                alert("Cập nhật thất bại: " + err.message);
             }
-            resetForm();
-            if (window.currentSearchContext) searchUsers(window.currentSearchContext);
-            else fetchUsers();
         });
-
-        /* --- Event submit searchForm --- */
-        document.getElementById('searchForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const context = {
-                username: document.getElementById('searchUsername').value,
-                email: document.getElementById('searchEmail').value,
-                phone: document.getElementById('searchPhone').value,
-                role: document.getElementById('searchRole').value,
-                status: document.getElementById('searchStatus').value,
-                fromDate: document.getElementById('searchFromDate').value,
-                toDate: document.getElementById('searchToDate').value,
-                page: 1,
-                limit: 5
-            };
-            searchUsers(context);
-        });
-
-        /* --- Init --- */
-        fetchUsers();
     </script>
+    <script src="./js/dashboard.js"></script>
 </body>
 
 </html>

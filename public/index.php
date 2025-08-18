@@ -22,12 +22,6 @@ $userController = new UserController($userService);
 
 header('Content-Type: application/json');
 
-$router->add('GET', '/users', [$userController, 'list']);
-$router->add('POST', '/users/search', [$userController, 'search']);
-$router->add('POST', '/users', [$userController, 'create']);
-$router->add('PUT', '/users/{id}', [$userController, 'update']);
-$router->add('DELETE', '/users/{id}', [$userController, 'delete']);
-
 $router->add('POST', '/api/auth/login', function () use ($authController) {
     $authController->login();
 });
@@ -56,6 +50,24 @@ $router->add('GET', '/api/auth/me', function () use ($authController, $authMiddl
 $router->add('GET', '/api/users', function () use ($userController, $authMiddleware) {
     if ($authMiddleware->handle()) {
         $userController->list();
+    }
+});
+
+$router->add('POST', '/api/users/search', function () use ($userController, $authMiddleware) {
+    if ($authMiddleware->handle()) {
+        $userController->search();
+    }
+});
+
+$router->add('PUT', '/api/users/{id}', function ($id) use ($userController, $authMiddleware) {
+    if ($authMiddleware->handle()) {
+        $userController->update($id);
+    }
+});
+
+$router->add('DELETE', '/api/users/{id}', function ($id) use ($userController, $authMiddleware) {
+    if ($authMiddleware->handle()) {
+        $userController->delete($id);
     }
 });
 

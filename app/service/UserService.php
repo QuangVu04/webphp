@@ -6,6 +6,7 @@ use app\dto\Pagination;
 use app\models\User;
 use app\repository\UserRepository;
 use app\dto\UserSearchContext;
+use app\enums\UserStatus;
 
 class UserService implements UserServiceInterface
 {
@@ -73,8 +74,9 @@ class UserService implements UserServiceInterface
         $user->setFullName($data['full_name'] ?? $user->getFullName());
         $user->setAvatar($data['avatar'] ?? $user->getAvatar());
         $user->setPhoneNumber($data['phone_number'] ?? $user->getPhoneNumber());
-        $user->setStatus($data['status'] ?? $user->getStatus());
-
+        if (!empty($data['status']) && in_array($data['status'], array_column(UserStatus::cases(), 'value'))) {
+            $user->setStatus(UserStatus::from($data['status']));
+        }
         return $this->userRepo->update($user);
     }
 

@@ -42,7 +42,7 @@ class UserRepositoryImpl implements UserRepository
     {
 
         $offset = ($page - 1) * $limit;
-        $result = $this->mysqli->query("SELECT n.username, n.email, n.full_name, n.phone_number, n.status, r.role_name, n.created_at,
+        $result = $this->mysqli->query("SELECT n.id,n.username, n.email, n.full_name, n.phone_number, n.status, r.role_name, n.created_at,
                                         COUNT(*) OVER() as totalItems
                                         FROM users n
                                         LEFT JOIN user_roles ur ON n.id = ur.user_id
@@ -52,6 +52,7 @@ class UserRepositoryImpl implements UserRepository
         while ($row = $result->fetch_assoc()) {
             $user = new UserResponse();
             $totalItems = (int) $row['totalItems'];
+            $user->setId($row['id']);
             $user->setUsername($row['username']);
             $user->setEmail($row['email']);
             $user->setFullName($row['full_name']);
@@ -164,6 +165,8 @@ class UserRepositoryImpl implements UserRepository
     public function update(User $user): User
     {
         $stmt = $this->mysqli->prepare("UPDATE users SET username = ?, email = ?, password = ?, full_name = ?, avatar = ?, phone_number = ?, status = ?, updated_at = NOW() WHERE id = ?");
+        $status = $user->getStatus()?->value;
+
         $stmt->bind_param(
             "sssssssi",
             $user->getUsername(),
@@ -172,7 +175,7 @@ class UserRepositoryImpl implements UserRepository
             $user->getFullName(),
             $user->getAvatar(),
             $user->getPhoneNumber(),
-            $user->getStatus(),
+            $status,
             $user->getId()
         );
         $stmt->execute();
@@ -204,7 +207,7 @@ class UserRepositoryImpl implements UserRepository
         $user->setFullName($row['full_name']);
         $user->setAvatar($row['avatar']);
         $user->setPhoneNumber($row['phone_number']);
-        // $user->setStatus($row['status']);
+        $user->setStatus(UserStatus::from($row['status']));
         return $user;
     }
 
@@ -253,7 +256,7 @@ class UserRepositoryImpl implements UserRepository
         $user->setFullName($row['full_name']);
         $user->setAvatar($row['avatar']);
         $user->setPhoneNumber($row['phone_number']);
-        // $user->setStatus(UserStatus::from($row['status']));
+        $user->setStatus(UserStatus::from($row['status']));
 
         return $user;
     }

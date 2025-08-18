@@ -5,23 +5,29 @@ use DateTime;
 
     class UserResponse
     {
+        private ?int $id;
         private string $username;
         private string $email;
         private string $fullName;
         private string $phoneNumber;
-        private string $status;
+        private ?string $status;
         private string $role;
         private ?DateTime $createdAt;
 
         public function __construct()
         {
+            $this->id = null;
             $this->username = '';
             $this->email = '';
             $this->fullName = '';
             $this->phoneNumber = '';
-            $this->status = '';
+            $this->status = null;
             $this->role = '';
             $this->createdAt = new DateTime();
+        }
+
+        public function setId(int $id): void {
+            $this->id = $id;
         }
 
         public function setUsername(string $username): void
@@ -42,7 +48,7 @@ use DateTime;
         {
             $this->fullName = $fullName;
         }
-        public function setStatus(string $status): void
+        public function setStatus(?string $status): void
         {
             $this->status = $status;
         }
@@ -59,6 +65,7 @@ use DateTime;
         public function toArray(): array
         {
             return [
+                'id' => $this->id,
                 'username' => $this->username,
                 'email' => $this->email,
                 'full_name' => $this->fullName,

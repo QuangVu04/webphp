@@ -158,7 +158,7 @@ async function updateUser(id, user) {
   const token = TokenManager.getAccessToken();
 
   try {
-    const res = await fetch(`${API_URL}/${id}`, {
+    const res = await fetch(`${API_URL}/users/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

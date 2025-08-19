@@ -6,126 +6,6 @@
     <title>User List</title>
     <link rel="stylesheet" href="./css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
-        /* Modal overlay */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.6);
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        /* Modal box */
-        .modal-content {
-            background: #fff;
-            padding: 20px 25px;
-            border-radius: 10px;
-            width: 420px;
-            max-width: 95%;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            animation: slideDown 0.3s ease;
-            font-family: "Segoe UI", Arial, sans-serif;
-        }
-
-        /* Title */
-        .modal-content h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 18px;
-            text-align: center;
-            color: #333;
-        }
-
-        /* Label + input layout */
-        .modal-content label {
-            display: block;
-            margin: 8px 0 4px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #555;
-        }
-
-        .modal-content input,
-        .modal-content select {
-            width: 100%;
-            padding: 8px 10px;
-            margin-bottom: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-            box-sizing: border-box;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .modal-content input:focus,
-        .modal-content select:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
-            outline: none;
-        }
-
-        /* Buttons row */
-        .modal-content .button-group {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .modal-content button {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        .modal-content button[type="submit"] {
-            background: #007bff;
-            color: #fff;
-        }
-
-        .modal-content button[type="submit"]:hover {
-            background: #0056b3;
-        }
-
-        .modal-content button[type="button"] {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .modal-content button[type="button"]:hover {
-            background: #ddd;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-15px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -144,7 +24,10 @@
                 <input type="email" id="searchEmail" placeholder="Email">
                 <input type="text" id="searchPhone" placeholder="Phone">
                 <input type="text" id="searchRole" placeholder="Role">
-                <input type="text" id="searchStatus" placeholder="Status">
+                <select id="searchStatus" style="min-width: 150px; padding:8px 10px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
                 <input type="date" id="searchFromDate" placeholder="From Date">
                 <input type="date" id="searchToDate" placeholder="To Date">
                 <button type="submit">Tìm kiếm</button>
@@ -210,8 +93,8 @@
         protectRoute();
         document.getElementById("logoutBtn").addEventListener("click", async () => {
             try {
-                await logout(); // dùng hàm logout() đã viết
-                window.location.replace("login.html"); // hoặc login.html
+                await logout();
+                window.location.replace("login.html");
             } catch (e) {
                 console.error("Logout failed:", e);
                 window.location.replace("login.html");
@@ -220,10 +103,9 @@
         document.getElementById("userForm").addEventListener("submit", async function (e) {
             e.preventDefault();
 
-            const id = document.getElementById("userId")?.value; // hidden input chứa ID
+            const id = document.getElementById("userId")?.value;
             console.log("Updating user with ID:", id);
 
-            // chỉ lấy field nếu tồn tại & có value
             const user = {};
             const username = document.getElementById("username")?.value;
             if (username) user.username = username;
@@ -246,7 +128,7 @@
                 alert("Cập nhật thành công!");
                 resetForm();
                 closeModal();
-                fetchUsers(); // reload lại danh sách
+                fetchUsers();
             } catch (err) {
                 alert("Cập nhật thất bại: " + err.message);
             }
